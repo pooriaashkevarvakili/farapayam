@@ -370,11 +370,11 @@ const columns = useMemo(() => [
    { field: "v3", headerName: "ویژگی ۳", flex: 1  },
   { field: "v4", headerName: "ویژگی ۴", flex: 1 },
 { field: "nameKala", headerName: "نام کالا", flex: 1.5 },
-  { field: "mablagh", headerName: "مبلغ", width: 120 },
-    { field: "nameenglisi", headerName: "نام انگلیسی" },
-    { field: "tahvildahandekala", headerName: "تحویل دهنده کالا" },
-    { field: "tahvildahandekala", headerName: "نام تحویل دهنده" },
-    { field: "bahayvahed", headerName: "بهای واحد" },
+  { field: "mablagh", headerName: "مبلغ", flex: 1 },
+    { field: "nameenglisi", headerName: "نام انگلیسی" ,flex: 1},
+    { field: "tahvildahandekala", headerName: "تحویل دهنده کالا",flex: 1 },
+    { field: "tahvildahandekala", headerName: "نام تحویل دهنده" ,flex: 1},
+    { field: "bahayvahed", headerName: "بهای واحد",flex: 1 },
  
 ], []);
 
