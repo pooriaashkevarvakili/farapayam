@@ -16,8 +16,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import { MdClose, MdEdit } from 'react-icons/md';           // Material Design Edit
-import { MdDelete } from 'react-icons/md';         // Material Design Delete
+import { MdClose, MdEdit } from 'react-icons/md';          
+import { MdDelete } from 'react-icons/md';         
 import { MdSettings } from 'react-icons/md';
 import { FaPlus } from "react-icons/fa";
 import {
@@ -28,7 +28,7 @@ import {
   FaMoneyBillWave,
   FaTruck,
   FaIndustry,
-FaBoxOpen,       // برای "اقلام کالا" (کالاها/موجودی)
+FaBoxOpen,      
   FaEllipsisH,
  
 
@@ -37,9 +37,8 @@ FaBoxOpen,       // برای "اقلام کالا" (کالاها/موجودی)
 FaTrashAlt, FaTags, FaIdCard,
  
 
-  // آیکون‌های جدید برای status bar
-  FaCog,          // تنظیم
-  FaCheck,        // تایید
+  FaCog,          
+  FaCheck,      
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
@@ -89,6 +88,11 @@ const formFields = [
   { name: "address", label: "آدرس" },
   { name: "telefon", label: "تلفن" },
   { name: "mobile", label: "موبایل" },
+    { name: "nameenglisi", label: "نام انگلیسی" },
+    { name: "tahvildahandekala", label: "تحویل دهنده کالا" },
+    { name: "tahvildahandekala", label: "نام تحویل دهنده" },
+    { name: "bahayvahed", label: "بهای واحد" },
+
 ];
 const createInitialForm = () =>
   Object.fromEntries(
@@ -100,6 +104,14 @@ const createInitialForm = () =>
 
 
 const [form, setForm] = useState(createInitialForm());
+const [manualTotals, setManualTotals] = useState(() => {
+  const saved = localStorage.getItem("anbar_manual_totals_v1");
+  return saved ? JSON.parse(saved) : {};
+});
+
+useEffect(() => {
+  localStorage.setItem("anbar_manual_totals_v1", JSON.stringify(manualTotals));
+}, [manualTotals]);
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -134,7 +146,10 @@ const handleSave = () => {
     saveRows(updated);
     setEditId(null);
   } else {
-    const newRow = { id: Date.now(), ...form };
+    const newRow = { id: Date.now(), ...form, v1: manualTotals.v1 || "",
+  v2: manualTotals.v2 || "",
+  v3: manualTotals.v3 || "",
+  v4: manualTotals.v4 || "", };
     saveRows([...rows, newRow]);
   }
 
@@ -160,37 +175,52 @@ const handleEdit = (row) => {
 };
 const totals = useMemo(() => {
   const sum = (field) =>
-    rows.reduce((acc, row) => {
-      const value = parseFloat(
-        String(row[field] ?? "0").replace(/,/g, "")
-      );
-      return acc + (isNaN(value) ? 0 : value);
+    rows.reduce((acc, r) => {
+      const val = parseFloat(String(r[field] ?? "0").replace(/[\s,]/g, "")) || 0;
+      return acc + val;
     }, 0);
 
-  return {
+  const calc = {
     jamKala: rows.length,
     jamMeghdar: sum("tedad"),
     jamMablagh: sum("mablagh"),
-    jamTakhfif: sum("takhfif"),
+    jamKol: sum("jamKol"),
     maliatAvarez: sum("maliat"),
-    ghabelePardakht: sum("jamKol"),
+    kosoorat: sum("kosoorat") || sum("takhfif") || 0,
+    jamGheymatTamam: sum("gheymat") || 0,
+    jamArz: sum("arz") || 0,
+    jamVazn: sum("vazn") || 0,
 
-    v1: "",
-    v2: "",
-    v3: "",
-    v4: "",
-    dahandeKala: "",
-    vahedKala: "",
-    tafsili2: "",
-    tafsili3: "",
-    tafsili4: "",
-    jamArz: 0,
-    jamGheymatTamam: 0,
-    jamVazn: 0,
-    kosoorat: 0,
-    hesabMarboot: "",
+    ghabelePardakht:
+      sum("jamKol") - (sum("kosoorat") || sum("takhfif") || 0) + sum("maliat"),
   };
-}, [rows]);
+
+  return {
+jamKala: manualTotals.jamKala ?? "",
+jamMeghdar:manualTotals.jamMeghdar ?? "",
+jamMablagh:manualTotals.jamMablagh ?? "",
+jamKol:manualTotals.jamKol ?? "",
+maliatAvarez:manualTotals.maliatAvarez ?? "",
+kosoorat:manualTotals.kosoorat ?? "",
+jamGheymatTamam:manualTotals.jamGheymatTamam ?? "",
+jamArz:manualTotals.jamArz ?? "",
+ghabelePardakht:manualTotals.ghabelePardakht ?? "",
+jamVazn:manualTotals.jamVazn ?? "",
+
+    v1: manualTotals.v1 ?? "",
+    v2: manualTotals.v2 ?? "",
+    v3: manualTotals.v3 ?? "",
+    v4: manualTotals.v4 ?? "",
+
+    dahandeKala: manualTotals.dahandeKala ?? "",
+    vahedKala: manualTotals.vahedKala ?? "",
+    hesabMarboot: manualTotals.hesabMarboot ?? "",
+
+    tafsili2: manualTotals.tafsili2 ?? "",
+    tafsili3: manualTotals.tafsili3 ?? "",
+    tafsili4: manualTotals.tafsili4 ?? "",
+  };
+}, [rows, manualTotals]);
 
 
 const goNext = () => {
@@ -234,50 +264,6 @@ const handleDeleteCurrent = () => {
   setConfirmOpen(true);
 };
 
-const columns = useMemo(
-  () => [
-    { field: "anbar", headerName: "انبار", flex: 1 },
-    { field: "serial", headerName: "سریال", flex: 1 },
-    { field: "tahvilGirande", headerName: "تحویل گیرنده", flex: 1 },
-    { field: "shomareFactor", headerName: "شماره فاکتور", flex: 1 },
-
-{
-  field: "tarikhFactor",
-  headerName: "تاریخ فاکتور",
-  flex: 1,
-  minWidth: 130,  
-  valueFormatter: (value) => {
-    if (!value) return "—";
-
-    if (value instanceof dayjs || (value && typeof value.format === 'function')) {
-      return value.format("YYYY-MM-DD");
-    }
-
-    const d = dayjs(value);
-    return d.isValid() ? d.format("YYYY-MM-DD") : "—";
-  },
-},
-    { field: "shomareSanad", headerName: "شماره سند", flex: 1 },
-        { field: "moshtari", headerName: "مشتری", flex: 1 },
-         { field: "codeKala", headerName: "کد کالا", flex: 1 },
-        { field: "nameKala", headerName: "نام کالا", flex: 1 },
-          { field: "tedad", headerName: "تعداد" },
-  { field: "gheymat", headerName: "قیمت" },
-  { field: "mablagh", headerName: "مبلغ" },
-  { field: "takhfif", headerName: "تخفیف" },
-  { field: "maliat", headerName: "مالیات" },
-  { field: "jamKol", headerName: "جمع کل" },
-  { field: "tozihat", headerName: "توضیحات" },
-  { field: "address", headerName: "آدرس" },
-  { field: "telefon", headerName: "تلفن" },
-  { field: "mobile", headerName: "موبایل" },
-
-
-  ],
-
-);
-
-
   if (!isVisible) return null;
 const statusBtn = {
   minWidth: 60,
@@ -305,7 +291,6 @@ const navBtn = {
   },
 };
 const handleConfirm = () => {
-  // می‌توانید اعتبارسنجی ساده اضافه کنید
   if (!form.nameKala?.trim() && !form.codeKala?.trim()) {
     setNotification({
       open: true,
@@ -318,19 +303,45 @@ const handleConfirm = () => {
   if (editId !== null) {
     // حالت ویرایش
     const updated = rows.map((r) =>
-      r.id === editId ? { ...form, id: editId } : r
+      r.id === editId
+        ? {
+            ...form,
+            id: editId,
+
+            // ذخیره ویژگی‌ها از input زیر جدول
+            v1: manualTotals.v1 || "",
+            v2: manualTotals.v2 || "",
+            v3: manualTotals.v3 || "",
+            v4: manualTotals.v4 || "",
+          }
+        : r
     );
+
     saveRows(updated);
+
     setNotification({
       open: true,
       message: "رکورد با موفقیت ویرایش شد",
       severity: "success",
     });
+
     setEditId(null);
+
   } else {
     // حالت ثبت جدید
-    const newRow = { id: Date.now(), ...form };
+    const newRow = {
+      id: Date.now(),
+      ...form,
+
+      // ذخیره ویژگی‌ها از input زیر جدول
+      v1: manualTotals.v1 || "",
+      v2: manualTotals.v2 || "",
+      v3: manualTotals.v3 || "",
+      v4: manualTotals.v4 || "",
+    };
+
     saveRows([...rows, newRow]);
+
     setNotification({
       open: true,
       message: "رکورد جدید ثبت شد",
@@ -338,9 +349,35 @@ const handleConfirm = () => {
     });
   }
 
-  // ریست فرم بعد از ذخیره موفق
+  // پاک کردن فرم
   setForm(createInitialForm());
 };
+
+
+const columns = useMemo(() => [
+    {
+    field: "rowNumber",
+    headerName: "ردیف",
+    width: 80,
+    sortable: false,
+    filterable: false,
+    renderCell: (params) =>
+      params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+  },
+     { field: "codeKala", headerName: "کد کالا", flex: 1 },
+   { field: "v1", headerName: "ویژگی ۱", flex: 1 },
+ { field: "v2", headerName: "ویژگی ۲", flex: 1  },
+   { field: "v3", headerName: "ویژگی ۳", flex: 1  },
+  { field: "v4", headerName: "ویژگی ۴", flex: 1 },
+{ field: "nameKala", headerName: "نام کالا", flex: 1.5 },
+  { field: "mablagh", headerName: "مبلغ", width: 120 },
+    { field: "nameenglisi", headerName: "نام انگلیسی" },
+    { field: "tahvildahandekala", headerName: "تحویل دهنده کالا" },
+    { field: "tahvildahandekala", headerName: "نام تحویل دهنده" },
+    { field: "bahayvahed", headerName: "بهای واحد" },
+ 
+], []);
+
   return (
 <LocalizationProvider dateAdapter={AdapterDayjs}>
   <Box
@@ -479,7 +516,6 @@ const handleConfirm = () => {
              <Tab 
     icon={<FaBoxOpen />} 
     label="اقلام کالا" 
-    // iconPosition="start"   ← اگر می‌خواهید آیکون سمت چپ متن باشد (پیش‌فرض top است)
   />
   
   <Tab 
@@ -494,14 +530,14 @@ const handleConfirm = () => {
             </Tabs>
 
             <Box sx={{ height: 400 }}>
-              <DataGrid
-                rows={rows}
-                columns={columns}
-                pageSizeOptions={[5, 10]}
-              />
+         <DataGrid
+  rows={[...rows]}   
+  columns={columns}
+  pageSizeOptions={[5, 10]}
+/>
             </Box>
 
-            <Box
+<Box
   sx={{
     borderTop: "1px solid #ccc",
     p: 2,
@@ -509,93 +545,220 @@ const handleConfirm = () => {
   }}
 >
   <Grid container spacing={2}>
+
     <Grid item xs={12} md={2}>
-      <TextField label="ویژگی ۱" value={totals.v1 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="ویژگی ۱"
+        value={totals.v1 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, v1: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="دهنده کالا" value={totals.dahandeKala ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="ویژگی ۲"
+        value={totals.v2 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, v2: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="واحد کالا" value={totals.vahedKala ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="ویژگی ۳"
+        value={totals.v3 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, v3: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع مبلغ" value={totals.jamMablagh ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="ویژگی ۴"
+        value={totals.v4 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, v4: e.target.value }))}
+        size="small"
+        fullWidth
+      />
+    </Grid>
+
+    {/* متنی‌های دیگر */}
+    <Grid item xs={12} md={2}>
+      <TextField
+        label="دهنده کالا"
+        value={totals.dahandeKala ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, dahandeKala: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="ویژگی ۲" value={totals.v2 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="واحد کالا"
+        value={totals.vahedKala ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, vahedKala: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="تفصیلی ۲" value={totals.tafsili2 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="تفصیلی ۲"
+        value={totals.tafsili2 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, tafsili2: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع کالا" value={totals.jamKala ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="تفصیلی ۳"
+        value={totals.tafsili3 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, tafsili3: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع مقدار" value={totals.jamMeghdar ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="تفصیلی ۴"
+        value={totals.tafsili4 ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, tafsili4: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="ویژگی ۳" value={totals.v3 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="حساب مرتبط"
+        value={totals.hesabMarboot ?? ""}
+        onChange={(e) => setManualTotals(prev => ({ ...prev, hesabMarboot: e.target.value }))}
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="تفصیلی ۳" value={totals.tafsili3 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع کالا"
+       
+                                                                value={totals.jamKala ?? ""}
+
+                onChange={(e) => setManualTotals(prev => ({ ...prev, jamKala: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع ارز" value={totals.jamArz ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع مقدار"
+                                                          value={totals.jamMeghdar ?? ""}
+
+      
+           onChange={(e) => setManualTotals(prev => ({ ...prev, jamMeghdar: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع قیمت تمام شده" value={totals.jamGheymatTamam ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع مبلغ"
+                                                  value={totals.jamMablagh ?? ""}
+
+                  onChange={(e) => setManualTotals(prev => ({ ...prev, jamMablagh: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="ویژگی ۴" value={totals.v4 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع ارز"
+                                          value={totals.jamArz ?? ""}
+
+    
+      
+                          onChange={(e) => setManualTotals(prev => ({ ...prev, jamArz: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="تفصیلی ۴" value={totals.tafsili4 ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع قیمت تمام شده"
+                                  value={totals.jamGheymatTamam ?? ""}
+
+                               onChange={(e) => setManualTotals(prev => ({ ...prev, jamGheymatTamam: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="جمع وزن" value={totals.jamVazn ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="جمع وزن"
+                          value={totals.jamVazn ?? ""}
+
+                                   onChange={(e) => setManualTotals(prev => ({ ...prev, jamVazn: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="کسورات" value={totals.kosoorat ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+      <TextField
+        label="کسورات"
+                  value={totals.kosoorat ?? ""}
+                                        onChange={(e) => setManualTotals(prev => ({ ...prev, kosoorat: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
-      <TextField label="حساب مرتبط" value={totals.hesabMarboot ?? ""} size="small" fullWidth InputProps={{ readOnly: true }} />
-    </Grid>
+      <TextField
+        label="مالیات و عوارض"
+                  value={totals.maliatAvarez ?? ""}
 
-    <Grid item xs={12} md={2}>
-      <TextField label="مالیات و عوارض" value={totals.maliatAvarez ?? 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+     
+                                                onChange={(e) => setManualTotals(prev => ({ ...prev, maliatAvarez: e.target.value }))}
+
+        size="small"
+        fullWidth
+      />
     </Grid>
 
     <Grid item xs={12} md={2}>
       <TextField
         label="قابل پرداخت"
-        value={totals.ghabelePardakht ?? 0}
+          value={totals.ghabelePardakht ?? ""}
+                                                   onChange={(e) => setManualTotals(prev => ({ ...prev, ghabelePardakht: e.target.value }))}
+
         size="small"
         fullWidth
-        InputProps={{
-          readOnly: true,
-          sx: {
-            fontWeight: "bold",
-            backgroundColor: "#fff8e1",
-          },
-        }}
+     
       />
     </Grid>
+
   </Grid>
 </Box>
 
@@ -621,16 +784,16 @@ const handleConfirm = () => {
   sx={{
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",             // ← مهم‌ترین تغییر: وسط‌چین
+    justifyContent: "center",             
     backgroundColor: "#ffffff",
     border: "1px solid #94a8d0",
     borderRadius: "6px",
     boxShadow: "0 1px 4px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.7)",
     width: "200px",
     height: "50px",
-    direction: "rtl",                     // جهت فارسی حفظ بشه
+    direction: "rtl",                 
     px: 2,   
-    marginRight:"30px"                             // کمی padding افقی برای تنفس بهتر متن
+    marginRight:"30px"                             
   }}
 >
   <Typography
@@ -638,7 +801,7 @@ const handleConfirm = () => {
       fontSize: 14,
       fontWeight: 700,
       color: "#0d47a1",
-      textAlign: "center",                // برای اطمینان از وسط‌چین بودن متن
+      textAlign: "center",              
       whiteSpace: "nowrap",
     }}
   >
@@ -680,7 +843,7 @@ const handleConfirm = () => {
         justifyContent: "space-between",
         gap: 1.5,
       }}
-    onClick={handleEditCurrent}// slightly smaller to match small button
+    onClick={handleEditCurrent}
   >
     ویرایش
   </Button>
@@ -730,7 +893,7 @@ const handleConfirm = () => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,                             // فاصله بین آیکون‌ها
+    gap: 3,                           
  
     
     direction: "rtl",
