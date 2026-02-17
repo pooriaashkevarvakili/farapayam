@@ -43,6 +43,8 @@ FaTrashAlt, FaTags, FaIdCard,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
+import { CiCircleCheck } from "react-icons/ci";
+import { IoCloseCircle } from "react-icons/io5";
 
 const STORAGE_KEY = "anbar_storage_v1";
 
@@ -71,6 +73,10 @@ const currentRecordNumber = currentIndex >= 0 ? currentIndex + 1 : rows.length;
 const formFields = [
   { name: "anbar", label: "انبار" },
   { name: "serial", label: "سریال" },
+    { name: "codehesab", label: "کد حساب" },
+{ name: "codehesab", label: "نوع رسید " },{ name: "codehesab", label: "شماره ارجاع" },{ name: "codehesab", label: "شماره درخواست" },
+{ name: "codehesab", label: "شماره سند" },{ name: "codehesab", label: "شماره فاکتور" },{ name: "codehesab", label: "محل ارجاع خرید" },
+
   { name: "tahvilGirande", label: "تحویل گیرنده" },
   { name: "shomareFactor", label: "شماره فاکتور" },
   { name: "tarikhFactor", label: "تاریخ فاکتور", type: "date" },
@@ -416,7 +422,7 @@ const columns = useMemo(() => [
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <FaFileInvoice size={16} />
-          <Typography fontSize={13}>رسید ریالی</Typography>
+          <Typography fontSize={13}>رسید انبار ریالی</Typography>
         </Box>
 
         <Box sx={{ display: "flex" }}>
@@ -900,7 +906,7 @@ const columns = useMemo(() => [
   }}
 >
   <FaChevronRight style={{ fontSize: 20, color: "#555", cursor: "pointer" }} />
-  <FaCog style={{ fontSize: 22, color: "#0d47a1" }} />
+
   <FaChevronLeft style={{ fontSize: 20, color: "#555", cursor: "pointer" }} />
 </Box>
 
@@ -923,7 +929,7 @@ const columns = useMemo(() => [
         gap: 1.5,
       }}
     >
-       <FaCheck style={{ fontSize: 17, color: editId ? "#0066cc" : "#999" }} />
+       <CiCircleCheck style={{ fontSize: 24, color: editId ? "#0066cc" : "#999" }} />
       تایید
      
     </Button>
@@ -942,7 +948,7 @@ const columns = useMemo(() => [
     
     
     >
-      <FaTimes style={{ fontSize: 17 }} />
+      <IoCloseCircle  style={{ fontSize: 24}} />
       انصراف
     </Button>
   </Box>
