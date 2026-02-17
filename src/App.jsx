@@ -96,7 +96,7 @@ const formFields = [
   { name: "mobile", label: "موبایل" },
     { name: "nameenglisi", label: "نام انگلیسی" },
     { name: "tahvildahandekala", label: "تحویل دهنده کالا" },
-    { name: "tahvildahandekala", label: "نام تحویل دهنده" },
+    { name: "nametahvildahande", label: "نام تحویل دهنده" },
     { name: "bahayvahed", label: "بهای واحد" },
 
 ];
